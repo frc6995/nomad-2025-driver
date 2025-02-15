@@ -1,0 +1,35 @@
+diff --git a/src/lib/pubsub/topic.js b/src/lib/pubsub/topic.js
+index 9d5f96f62d3e88accf769e058d7b0ae1c7e0350c..532e74f0da736577d1ee06d0815dc42bb18f7195 100644
+--- a/src/lib/pubsub/topic.js
++++ b/src/lib/pubsub/topic.js
+@@ -104,7 +104,8 @@ var NetworkTablesTopic = /** @class */ (function (_super) {
+      */
+     NetworkTablesTopic.prototype.announce = function (params) {
+         _super.prototype.announce.call(this, params);
+-        if (params.pubuid === this._pubuid) {
++        console.log("announce", params)
++        if (params.pubuid === this._pubuid && this._pubuid !== undefined) {
+             this._publisher = true;
+         }
+     };
+diff --git a/src/lib/socket/messenger.js b/src/lib/socket/messenger.js
+index cd992fe77368a1e2539d7c83e9791258c763b74f..bd7a6d04bb2f29af86ceacf489df3c160d574fd0 100644
+--- a/src/lib/socket/messenger.js
++++ b/src/lib/socket/messenger.js
+@@ -141,6 +141,7 @@ var Messenger = /** @class */ (function () {
+                             resolve(msg);
+                         };
+                         var wsHandler = function (event) {
++                            
+                             var message = _this.parseAndFilterMessage(event, 'announce');
+                             if (message && message.params.name === params.name) {
+                                 resolver(message);
+@@ -153,7 +154,7 @@ var Messenger = /** @class */ (function () {
+                         // This is a bug in 2025.2.1 WPILib
+                         var subMsg = {
+                             options: {
+-                                topicsonly: true,
++                                //topicsonly: true,
+                             },
+                             topics: [params.name],
+                             subuid: _this.getNextSubUID(),

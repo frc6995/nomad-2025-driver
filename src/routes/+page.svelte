@@ -10,17 +10,17 @@
     import {appWindow} from "@tauri-apps/api/window"
     NT.setIP("localhost")
     //NT.setIP("10.69.95.2")
-    let max = NT.NTInt(150, "/DriverDisplay/maxTime")
-    let time = NT.NTDouble(-1, "/DriverDisplay/matchTime");
+    let max = NT.NTIntSubscriber(150, "/DriverDisplay/maxTime")
+    let time = NT.NTDoubleSubscriber(-1, "/DriverDisplay/matchTime");
 
-    let branch = NT.NTInt(0, "/DriverDisplay/branch");
-    let level = NT.NTInt(0, "/DriverDisplay/level");
-    let climb = NT.NTInt(0, "/DriverDisplay/climb");
+    let branch = NT.NTIntSubscriber(0, "/DriverDisplay/branch");
+    let level = NT.NTIntSubscriber(0, "/DriverDisplay/level");
+    let climb = NT.NTIntSubscriber(0, "/DriverDisplay/climb");
     let data = "/SmartDashboard/autoChooser"
-    let enabled = NT.NTBoolean(false, "/DriverDisplay/enabled");
-    let autoOptions = NT.NTStringArray([], `${data.replace(/\/$/, '')}/options`);
-	let autoSelected = NT.NTString("", `${data.replace(/\/$/, '')}/selected`)
-	let autoActive = NT.NTString("", `${data.replace(/\/$/, '')}/active`)
+    let enabled = NT.NTBooleanSubscriber(false, "/DriverDisplay/enabled");
+    let autoOptions = NT.NTStringArraySubscriber([], `${data.replace(/\/$/, '')}/options`);
+	let autoSelected = NT.NTStringPublisher("", `${data.replace(/\/$/, '')}/selected`)
+	let autoActive = NT.NTStringSubscriber("", `${data.replace(/\/$/, '')}/active`)
     $: ntConnected = readable(false, function start(set) {
         const interval = setInterval(() => {
             set(NT.nt.isRobotConnected());
@@ -38,11 +38,11 @@
         }
     })
 
-    let hasNote = NT.NTBoolean(false, "/DriverDisplay/hasNote");
+    let hasNote = NT.NTBooleanSubscriber(false, "/DriverDisplay/hasNote");
 
-    let intakeHomed = NT.NTBoolean(false, "/DriverDisplay/intakeHomed");
-    let controller1 = NT.NTBoolean(false, "/DriverDisplay/controller0");
-    let controller2 = NT.NTBoolean(false, "/DriverDisplay/controller1");
+    let intakeHomed = NT.NTBooleanSubscriber(false, "/DriverDisplay/intakeHomed");
+    let controller1 = NT.NTBooleanSubscriber(false, "/DriverDisplay/controller0");
+    let controller2 = NT.NTBooleanSubscriber(false, "/DriverDisplay/controller1");
     $: color = ($max > 20 && $time < 25 && $time >= 0) ? "yellow": "white";
     let reefX = 12;
     let reefY = 1;

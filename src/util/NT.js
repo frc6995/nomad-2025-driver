@@ -2,12 +2,14 @@ import { NetworkTables, NetworkTablesTypeInfos } from 'ntcore-ts-client';
 import { writable } from 'svelte/store';
 import { onDestroy } from 'svelte';
 
+let pubuid = 1000;
 class NT {
     constructor(ip) {
         this.ip = ip;
         
         this.nt  = NetworkTables.getInstanceByURI(ip);
         this.nt.changeURI("10.69.95.2");
+
         this.ntSubscribers = {}
     }
 
@@ -17,25 +19,55 @@ class NT {
         }
         this.ip = ip;        
     }
-    NTValue(init, key, topicType) {
+    NTSubscriber(init, key, topicType) {
 
         const internal = writable(init);
         console.log("create")
         let _val = init;
-        let isPublishing = false;
-        const subs = [];
         let topic = this.nt.createTopic(key, topicType);
         let subuuid = topic.subscribe((value)=>{
                 internal.set(value);
             }
         );
-       
 
         const subscribe = internal.subscribe;
         
-        const set = (v) => {
-            if (!topic.publisher) {
-                topic.publish();
+        const get = ()=>topic.getValue();
+        
+        const type = () => topicType;
+
+        let store = {}
+        store.subscribe = subscribe;
+        store.get = get;
+        store.type = type;
+        return store;
+    }
+
+    NTIntSubscriber         (init, key){return this.NTSubscriber(init, key, NetworkTablesTypeInfos.kInteger) }
+    NTDoubleSubscriber      (init, key){return this.NTSubscriber(init, key, NetworkTablesTypeInfos.kDouble) }
+    NTBooleanSubscriber     (init, key){return this.NTSubscriber(init, key, NetworkTablesTypeInfos.kBoolean) }
+    NTStringSubscriber      (init, key){return this.NTSubscriber(init, key, NetworkTablesTypeInfos.kString) }
+    NTIntArraySubscriber    (init, key){return this.NTSubscriber(init, key, NetworkTablesTypeInfos.kIntegerArray) }
+    NTDoubleArraySubscriber (init, key){return this.NTSubscriber(init, key, NetworkTablesTypeInfos.kDoubleArray) }
+    NTBooleanArraySubscriber(init, key){return this.NTSubscriber(init, key, NetworkTablesTypeInfos.kBooleanArray) }
+    NTStringArraySubscriber (init, key){return this.NTSubscriber(init, key, NetworkTablesTypeInfos.kStringArray) }
+
+    NTPublisher(init, key, topicType) {
+
+        const internal = writable(init);
+        console.log("create")
+        let _val = init;
+        let topic = this.nt.createTopic(key, topicType);
+
+        const subscribe = internal.subscribe;
+        
+        const set = async (v) => {
+            if (!topic.publisher || topic.pubuid === undefined) {
+                console.log("Publishing")
+                console.log(await topic.publish({}, pubuid));
+                pubuid = pubuid+1;
+                console.log(topic)
+                console.log(this.nt.client)
             }
             topic.setValue(v);
             internal.set(v);
@@ -43,11 +75,11 @@ class NT {
 
         const get = ()=>topic.getValue();
         
-        const update = (fn) => set(fn(_val));
+        const update = async (fn) => await set(fn(_val));
         const type = () => topicType;
 
         // We create our store as a function so that it can be passed as a callback where the value to set is the first parameter
-        function store(val) {set(val)}
+        async function store(val) {await set(val)}
         store.subscribe = subscribe;
         store.set = set;
         store.get = get;
@@ -56,14 +88,14 @@ class NT {
         return store;
     }
 
-    NTInt(init, key){return this.NTValue(init, key, NetworkTablesTypeInfos.kInteger) }
-    NTDouble(init, key){return this.NTValue(init, key, NetworkTablesTypeInfos.kDouble) }
-    NTBoolean(init, key){return this.NTValue(init, key, NetworkTablesTypeInfos.kBoolean) }
-    NTString(init, key){return this.NTValue(init, key, NetworkTablesTypeInfos.kString) }
-    NTIntArray(init, key){return this.NTValue(init, key, NetworkTablesTypeInfos.kIntegerArray) }
-    NTDoubleArray(init, key){return this.NTValue(init, key, NetworkTablesTypeInfos.kDoubleArray) }
-    NTBooleanArray(init, key){return this.NTValue(init, key, NetworkTablesTypeInfos.kBooleanArray) }
-    NTStringArray(init, key){return this.NTValue(init, key, NetworkTablesTypeInfos.kStringArray) }
+    NTIntPublisher         (init, key){return this.NTPublisher(init, key, NetworkTablesTypeInfos.kInteger) }
+    NTDoublePublisher      (init, key){return this.NTPublisher(init, key, NetworkTablesTypeInfos.kDouble) }
+    NTBooleanPublisher     (init, key){return this.NTPublisher(init, key, NetworkTablesTypeInfos.kBoolean) }
+    NTStringPublisher      (init, key){return this.NTPublisher(init, key, NetworkTablesTypeInfos.kString) }
+    NTIntArrayPublisher    (init, key){return this.NTPublisher(init, key, NetworkTablesTypeInfos.kIntegerArray) }
+    NTDoubleArrayPublisher (init, key){return this.NTPublisher(init, key, NetworkTablesTypeInfos.kDoubleArray) }
+    NTBooleanArrayPublisher(init, key){return this.NTPublisher(init, key, NetworkTablesTypeInfos.kBooleanArray) }
+    NTStringArrayPublisher (init, key){return this.NTPublisher(init, key, NetworkTablesTypeInfos.kStringArray) }
     
 }
 
